@@ -38,28 +38,32 @@ The script prints a table with the following columns:
 - **Final Value** – portfolio value at the end of the period.
 - **Profit/Loss** – absolute gain.
 - **ROI (%)** – percentage return.
-- **Today's Action** – a plain‑language recommendation for the current month ("Buy normal amount", "Buy more", or "Buy less").
-- **Today's Amount** – the exact dollar amount the algorithm recommends buying today.
+- **Zone** – the market zone/phase for today (e.g., "Normal", "Above SMA", "Euphoria Zone").
+- **Today's Amount** – exact dollar amount the algorithm recommends buying today.
+- **CAGR (%)** – Compound Annual Growth Rate over the back‑test period.
+- **SMA 200** – the latest 200‑day SMA value used for the calculations.
+
+> **Note:** `END_DATE` in `main.py` is now set automatically to the system’s current date using `date.today().isoformat()`, so the back‑test always runs up to today without manual changes.
 
 ---
 
-## Sample Results (SPY, 2000‑01‑01 → 2023‑12‑31)
+## Sample Results (SPY, 2015‑01‑01 → today)
 ```
 --- Adaptive DCA Backtester ---
 Ticker: SPY
-Period: 2000-01-01 to 2023-12-31
+Period: 2015-01-01 to 2025-11-19
 Base Monthly Budget: $1000.0
 ------------------------------
 Running Standard DCA...
 Running Price‑Deviation DCA (SMA)...
-Running Buy-the-dip...
+Running Buy‑the‑dip...
 Running RSI‑Based DCA...
 
-                    Strategy  Total Invested  Final Value  Profit/Loss  ROI (%)  Today's Action      Today's Amount
-0               Standard DCA      288,000.00 1,155,432.16   867,432.16   301.19  Buy normal amount        1,000.00
-1  Price‑Deviation DCA (SMA)      264,000.00 1,155,034.94   891,034.94   337.51  Buy less                 500.00
-2                Buy‑the‑dip      413,000.00 1,424,703.71 1,011,703.71   374.33  Buy less                 500.00
-3              RSI‑Based DCA      274,500.00 1,112,143.30   837,643.30   305.15  Buy normal amount        500.00
+                    Strategy  Total Invested  Final Value  Profit/Loss  ROI (%)       Zone  Today's Amount  CAGR (%)  SMA 200
+0               Standard DCA      131,000.00   304,267.91   173,267.91   132.27   Standard        1,000.00      8.05   611.41
+1  Price‑Deviation DCA (SMA)      104,000.00   251,343.68   147,343.68   141.68  Above SMA          500.00      8.45   611.41
+2                Buy‑the‑dip      146,000.00   347,749.47   201,749.47   138.18     Normal        1,000.00      8.30   611.41
+3              RSI‑Based DCA      125,000.00   288,303.63   163,303.63   130.64   Oversold        2,000.00      7.98   611.41
 ```
 
 ### Interpretation
