@@ -1,19 +1,22 @@
 # Adaptive DCA Strategy Suite
 
 ## Project Overview
-This repository implements a **monthly Dollar‑Cost Averaging (DCA)** framework with several adaptive variations:
+This repository provides a **monthly Dollar‑Cost Averaging (DCA)** framework with several adaptive variations that adjust the monthly investment based on market conditions.
 
-1. **Standard DCA** – fixed $1,000 purchase each month.
-2. **Price‑Deviation DCA (SMA)** – compares price to a 200‑day Simple Moving Average (SMA).  
-   - **Tolerance:** ±5 % of the SMA is considered *neutral* (regular $1,000 purchase).  
-   - **Below SMA – 5 %** → invest **2×** ($2,000).  
-   - **Above SMA + 5 %** → invest **0.5×** ($500).
-3. **SMA Threshold DCA (10 %)** – same SMA but with a stricter 10 % band.
-4. **RSI‑Based DCA** – uses the 14‑day Relative Strength Index.
-
-The framework backtests each strategy on historical price data and reports performance metrics **and** a breakdown of how many purchases occurred in each market phase.
-
----
+### Implemented Strategies
+1. **Standard DCA** – Fixed $1,000 purchase each month.
+2. **Price‑Deviation DCA (SMA)** – Uses a 200‑day SMA with a **±5 % tolerance** to decide whether to buy more, less, or the normal amount.
+3. **Buy‑the‑dip** – Tiered‑multiplier strategy based on the price’s deviation from the SMA:
+   | Zone | Price relative to SMA | Multiplier | Phase label |
+   |------|-----------------------|------------|-------------|
+   | **Euphoria Zone** | > +10 % above SMA | **0.5×** | "Euphoria Zone" |
+   | **Normal** | 0 % to +10 % above SMA | **1.0×** | "Normal" |
+   | **10 % Discount** | 0 % to –10 % below SMA | **2.0×** | "10% Discount" |
+   | **20 % Discount** | –10 % to –20 % below SMA | **4.0×** | "20% Discount" |
+   | **30 % Discount** | –20 % to –30 % below SMA | **8.0×** | "30% Discount" |
+   | **40 % Discount** | –30 % to –40 % below SMA | **16.0×** | "40% Discount" |
+   | **Max Discount** | > –40 % below SMA (i.e., > 40 % below SMA) | **32.0×** | "Max Discount" |
+4. **RSI‑Based DCA** – Uses the 14‑day Relative Strength Index to increase or decrease the monthly purchase.
 
 ## Installation (uses `uv`)
 ```bash
@@ -35,7 +38,8 @@ The script prints a table with the following columns:
 - **Final Value** – portfolio value at the end of the period.
 - **Profit/Loss** – absolute gain.
 - **ROI (%)** – percentage return.
-- **Phase Counts** – how many monthly purchases fell into each defined phase.
+- **Today's Action** – a plain‑language recommendation for the current month ("Buy normal amount", "Buy more", or "Buy less").
+- **Today's Amount** – the exact dollar amount the algorithm recommends buying today.
 
 ---
 
@@ -47,33 +51,30 @@ Period: 2000-01-01 to 2023-12-31
 Base Monthly Budget: $1000.0
 ------------------------------
 Running Standard DCA...
-Running Price-Deviation DCA (SMA)...
-Running SMA Threshold DCA (10%)...
-Running RSI-Based DCA...
+Running Price‑Deviation DCA (SMA)...
+Running Buy-the-dip...
+Running RSI‑Based DCA...
 
---- Performance Report ---
-                    Strategy  Total Invested  Final Value  Profit/Loss  ROI (%)                                       Phase Counts
-0               Standard DCA      288,000.00 1,155,432.08   867,432.08   301.19                                  {'Standard': 288}
-1  Price-Deviation DCA (SMA)      264,000.00 1,155,034.86   891,034.86   337.51  {'Neutral': 114, 'Below SMA': 42, 'Above SMA': 132}
-2    SMA Threshold DCA (10%)      285,000.00 1,186,168.15   901,168.15   316.20  {'Neutral': 228, 'Significantly Below SMA': 18, 'Significantly Above SMA': 39}
-3              RSI-Based DCA      274,500.00 1,112,143.22   837,643.22   305.15  {'Neutral': 225, 'Overbought': 51, 'Oversold': 12}
-------------------------------
+                    Strategy  Total Invested  Final Value  Profit/Loss  ROI (%)  Today's Action      Today's Amount
+0               Standard DCA      288,000.00 1,155,432.16   867,432.16   301.19  Buy normal amount        1,000.00
+1  Price‑Deviation DCA (SMA)      264,000.00 1,155,034.94   891,034.94   337.51  Buy less                 500.00
+2                Buy‑the‑dip      413,000.00 1,424,703.71 1,011,703.71   374.33  Buy less                 500.00
+3              RSI‑Based DCA      274,500.00 1,112,143.30   837,643.30   305.15  Buy normal amount        500.00
 ```
 
-### Interpreting the Phase Counts
-- **Standard DCA** – always `Standard` (one purchase per month).
-- **Price‑Deviation DCA (SMA)** – with a **5 % tolerance** you see a substantial number of *neutral* purchases (114 out of 288 months).  
-  - `Below SMA` (42) and `Above SMA` (132) represent the months where the algorithm aggressively bought more or less, respectively.
-- **SMA Threshold DCA (10 %)** – uses a stricter 10 % band, so most months fall into the `Neutral` bucket (228), with fewer extreme moves.
-- **RSI‑Based DCA** – `Oversold` (12) and `Overbought` (51) indicate the months where the RSI triggered larger or smaller buys.
+### Interpretation
+- **Standard DCA** – baseline performance.
+- **Price‑Deviation DCA (SMA)** – benefits from buying less when the price is significantly above the SMA.
+- **Buy‑the‑dip** – the most aggressive strategy, scaling purchases up to **32×** the base amount when the price is far below the SMA, delivering the highest ROI in this sample.
+- **RSI‑Based DCA** – adjusts exposure based on oversold/overbought conditions.
 
 ---
 
 ## Extending the Framework
-- **Adjust SMA window** – change `SMA_200` to another period in `data_loader.py`.
-- **Change tolerance** – modify the `tolerance = 0.05 * sma` line in `strategies.py` for the SMA strategy.
+- **Adjust SMA window** – modify `SMA_200` in `data_loader.py`.
+- **Change tolerance** – edit the `tolerance = 0.05 * sma` line in `strategies.py` for the SMA‑based strategy.
 - **Add new indicators** – e.g., MACD, Bollinger Bands, and create a new strategy class following the `Strategy` interface.
-- **Different assets** – set `TICKER` in `main.py` to any symbol supported by `yfinance` (e.g., `BTC-USD`, `ETH-USD`).
+- **Different assets** – set `TICKER` in `main.py` to any symbol supported by `yfinance` (e.g., `BTC-USD`).
 
 ---
 
