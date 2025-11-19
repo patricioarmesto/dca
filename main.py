@@ -45,7 +45,6 @@ def main():
     # Formatting for better readability
     pd.options.display.float_format = '{:,.2f}'.format
     
-    print("\n--- Performance Report ---")
     print(results_df[['Strategy', 'Total Invested', 'Final Value', 'Profit/Loss', 'ROI (%)']])
     print("-" * 30)
 

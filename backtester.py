@@ -11,6 +11,7 @@ def run_backtest(strategy: Strategy, data: pd.DataFrame, monthly_budget: float) 
     
     total_invested = 0.0
     total_shares = 0.0
+    phase_counts = {}  # Track purchase phases
     
     # For logging history if needed
     history = []
@@ -24,6 +25,9 @@ def run_backtest(strategy: Strategy, data: pd.DataFrame, monthly_budget: float) 
             
         # Ask strategy how much to invest
         amount_to_invest = strategy.calculate_investment_amount(row, monthly_budget)
+        # Determine phase for this purchase
+        phase = strategy.get_phase(row)
+        phase_counts[phase] = phase_counts.get(phase, 0) + 1
         
         # Buy shares
         shares_bought = amount_to_invest / price
@@ -51,5 +55,6 @@ def run_backtest(strategy: Strategy, data: pd.DataFrame, monthly_budget: float) 
         'Final Value': final_value,
         'Profit/Loss': profit_loss,
         'ROI (%)': roi,
-        'Total Shares': total_shares
+        'Total Shares': total_shares,
+        'Phase Counts': phase_counts
     }
