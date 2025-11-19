@@ -1,3 +1,4 @@
+from datetime import date
 import pandas as pd
 from data_loader import fetch_data, calculate_indicators
 from strategies import StandardDCA, SmaDCA, RsiDCA, BuyTheDip
@@ -6,8 +7,8 @@ from backtester import run_backtest
 def main():
     # Configuration
     TICKER = "SPY"
-    START_DATE = "2000-01-01"
-    END_DATE = "2023-12-31"
+    START_DATE = "2015-01-01"
+    END_DATE = date.today().isoformat()
     MONTHLY_BUDGET = 1000.0
     
     print(f"--- Adaptive DCA Backtester ---")
@@ -49,11 +50,19 @@ def main():
         
     # 4. Display Results
     results_df = pd.DataFrame(results)
-    
+
+    # Compute additional metrics: CAGR and SMA 200 (latest)
+    # Years between start and end dates
+    years = (pd.to_datetime(END_DATE) - pd.to_datetime(START_DATE)).days / 365.25
+    latest_sma = latest_row['SMA_200']
+    # Add CAGR and SMA columns to each result
+    results_df['CAGR (%)'] = ((results_df['Final Value'] / results_df['Total Invested']) ** (1 / years) - 1) * 100
+    results_df['SMA 200'] = latest_sma
+
     # Formatting for better readability
     pd.options.display.float_format = '{:,.2f}'.format
     
-    print(results_df[['Strategy', 'Total Invested', 'Final Value', 'Profit/Loss', 'ROI (%)', "Zone", "Today's Amount"]])
+    print(results_df[['Strategy', 'Total Invested', 'Final Value', 'Profit/Loss', 'ROI (%)', "Zone", "Today's Amount", 'CAGR (%)', 'SMA 200']])
     print("-" * 30)
 
 if __name__ == "__main__":
