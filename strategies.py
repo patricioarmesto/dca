@@ -194,3 +194,36 @@ class RsiDCA(Strategy):
             return "Overbought"
         else:
             return "Neutral"
+
+class CapeRatioDCA(Strategy):
+    @property
+    def name(self) -> str:
+        return "CAPE Ratio DCA"
+
+    def calculate_investment_amount(self, row: pd.Series, base_amount: float) -> float:
+        """Adjust investment based on the Shiller CAPE ratio.
+        - CAPE > 25 (overvalued) → reduce buying (0.5×).
+        - CAPE < 15 (undervalued) → increase buying (2.0×).
+        - Otherwise → normal amount (1.0×).
+        """
+        cape = row.get('CAPE')
+        if pd.isna(cape):
+            return base_amount
+        if cape > 25:
+            multiplier = 0.5
+        elif cape < 15:
+            multiplier = 2.0
+        else:
+            multiplier = 1.0
+        return base_amount * multiplier
+
+    def get_phase(self, row: pd.Series) -> str:
+        cape = row.get('CAPE')
+        if pd.isna(cape):
+            return "Neutral"
+        if cape > 25:
+            return "High CAPE"
+        elif cape < 15:
+            return "Low CAPE"
+        else:
+            return "Normal CAPE"

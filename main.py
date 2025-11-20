@@ -1,7 +1,7 @@
 from datetime import date
 import pandas as pd
-from data_loader import fetch_data, calculate_indicators
-from strategies import StandardDCA, SmaDCA, RsiDCA, BuyTheDip
+from data_loader import fetch_data, calculate_indicators, merge_cape
+from strategies import StandardDCA, SmaDCA, RsiDCA, BuyTheDip, CapeRatioDCA
 from backtester import run_backtest
 
 def main():
@@ -21,6 +21,8 @@ def main():
     try:
         df = fetch_data(TICKER, START_DATE, END_DATE)
         df = calculate_indicators(df)
+        # Merge CAPE ratio data into the dataframe
+        df = merge_cape(df)
     except Exception as e:
         print(f"Error fetching data: {e}")
         return
@@ -30,6 +32,7 @@ def main():
         StandardDCA(),
         SmaDCA(),
         BuyTheDip(),
+        CapeRatioDCA(),
         RsiDCA()
     ]
     
